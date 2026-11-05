@@ -46,7 +46,7 @@ Stos technologiczny: Python z bibliotekami OpenCV i scikit-image (przetwarzanie 
 - Punkt odniesienia (prosta metoda, z którą porównacie wynik): prosty baseline, czyli klasyfikator przewidujący najczęstszą klasę (DummyClassifier), co daje ok. 25–30% accuracy przy 4 klasach, oraz k-NN na surowych pikselach. Model HOG + SVM musi wyraźnie pokonać oba.
 
 ## 9. Zakres minimalny (co powstanie na pewno)
-Zakres minimalny: klasyfikacja zdjęć do 3–4 typów pojazdów (osobowy, ciężarowy, autobus, motocykl). Projekt obejmuje publiczny zbiór danych, cechy HOG, klasyfikator SVM lub Random Forest, ocenę metrykami (accuracy, F1, macierz pomyłek) oraz prosty skrypt zwracający typ pojazdu dla podanego zdjęcia.
+Zakres minimalny: klasyfikacja zdjęć do 3–4 typów pojazdów (osobowy, ciężarowy, autobus, motocykl, ambulans). Projekt obejmuje publiczny zbiór danych, cechy HOG, klasyfikator SVM lub Random Forest, ocenę metrykami (accuracy, F1, macierz pomyłek) oraz prosty skrypt zwracający typ pojazdu dla podanego zdjęcia.
 ## 10. Zakres opcjonalny (co dorobimy, jeśli starczy czasu)
 Poza zakresem: detekcja wielu pojazdów na jednym obrazie, analiza wideo w czasie rzeczywistym, głębokie sieci neuronowe i wdrożenie na urządzenia brzegowe. Te elementy można wymienić jako możliwe rozszerzenia.
 ## 11. Repozytorium
@@ -55,8 +55,8 @@ https://github.com/m-zarzycki/Vehicle-type-detector
 (uzupełnicie 22.10)
 
 ## 12. Główne ryzyko i plan awaryjny
-Ryzyko: niska skuteczność modelu przez zmienne ujęcia i oświetlenie, podobne klasy lub mały zbiór danych.  
-Plan awaryjny: augmentacja i zbalansowanie danych, mniej klas, strojenie SVM. W ostateczności cechy z gotowej sieci CNN (np. MobileNet) połączone z klasycznym SVM.
+**Ryzyko: niska skuteczność modelu przez zmienne ujęcia i oświetlenie, podobne klasy lub mały zbiór danych.  
+Plan awaryjny: augmentacja i zbalansowanie danych, mniej klas, strojenie SVM. W ostateczności cechy z gotowej sieci CNN (np. MobileNet) połączone z klasycznym SVM.**
 ---
 
 *Decyzja prowadzącego:* [ ] zatwierdzony  [ ] do poprawy · *Uwagi:*
