@@ -1,0 +1,42 @@
+=== Sprint 5.11 ===
+
+Zobowiązanie z poprzednich zajęć: utworzenie struktury projektu i rozpoczęcie implementacji kodu – tak, zrobione
+
+
+
+[Radosław Sieroń]
+
+Zrobiłem/zrobiłam: Poprawa karty tematu
+
+Na następne zajęcia zrobię: Implementacja kodu
+
+
+
+[Michał Zarzycki]
+
+Zrobiłem/zrobiłam: Struktura projektu
+
+Na następne zajęcia zrobię: Implementacja kodu
+
+
+
+Blokuje nas: nic
+
+Zobowiązanie zespołu na następne zajęcia: działający w repozytorium proces od wycięcia pojazdów ze zdjęć do predykcji typu pojazdu dla pojedynczego zdjęcia, wraz z wynikami walidacji krzyżowej.
+
+Radosław Sieroń:
+- src/dataset.py: klasy BoundingBox i YoloDataset (odczyt etykiet YOLO, pomijanie zduplikowanych zdjęć) oraz funkcja load_crops()
+- src/make_crops.py: funkcja make_crops() zapisująca wycinki do data/crops/ (około 995 wycinków po odrzuceniu ramek o krótszym boku poniżej 32 px)
+- przegląd wycinków każdej klasy i dopisanie do README informacji o duplikatach w zbiorze
+
+Michał Zarzycki:
+- src/features.py: klasa HogTransformer (cechy HOG)
+- src/train.py: funkcje build_model(), with_flips(), cross_validate() i train() oraz baseline'y DummyClassifier i k-NN na surowych pikselach
+- src/classifier.py: klasa VehicleClassifier
+- predict.py: skrypt zwracający typ pojazdu dla podanego zdjęcia
+
+Wspólnie:
+- wyniki walidacji krzyżowej na train + valid: accuracy, macro F1 i recall każdej klasy, w porównaniu z baseline'ami i progami z karty
+- uzgodnienie z prowadzącym planu awaryjnego MobileNet + SVM, ponieważ wstępny test HOG + SVM daje macro F1 około 0,67 przy progu 0,75
+
+Zbiór testowy pozostaje nieużyty do czasu wyboru ostatecznego modelu.
