@@ -29,21 +29,21 @@ Zarządcy dróg i samorządy potrzebują dokładnych danych o tym, jakie pojazdy
 
 Dlaczego ta technologia pasuje do tego problemu (2–3 zdania):
 
-Klasyczne uczenie maszynowe (np. SVM, Random Forest, k-NN) dobrze pasuje do problemu Vehicle Type Detector, ponieważ klasyfikacja typu pojazdu (osobowy, ciężarowy, motocykl, autobus) opiera się na cechach, które można łatwo wyekstrahować ręcznie: wymiarach, proporcjach sylwetki, histogramach gradientów (HOG) czy liczbie osi. Takie modele działają skutecznie już przy stosunkowo małych zbiorach danych, uczą się szybko i nie wymagają mocnego GPU, co ułatwia wdrożenie, np. na urządzeniach brzegowych przy drogach. Są też bardziej interpretowalne niż sieci głębokie, więc łatwiej wyjaśnić, dlaczego pojazd został przypisany do danej klasy.
+Klasyczne uczenie maszynowe (np. SVM, Random Forest, k-NN) dobrze pasuje do problemu Vehicle Type Detector, ponieważ klasyfikacja typu pojazdu (osobowy, ciężarowy, motocykl, autobus, ambulans) opiera się na cechach, które można łatwo wyekstrahować ręcznie: wymiarach, proporcjach sylwetki, histogramach gradientów (HOG) czy liczbie osi. Takie modele działają skutecznie już przy stosunkowo małych zbiorach danych, uczą się szybko i nie wymagają mocnego GPU, co ułatwia wdrożenie, np. na urządzeniach brzegowych przy drogach. Są też bardziej interpretowalne niż sieci głębokie, więc łatwiej wyjaśnić, dlaczego pojazd został przypisany do danej klasy.
 
 
 ## 6. Dane
 
-- Źródło: https://www.kaggle.com/datasets/ahmedhaytham/car-detection
+- Źródło: https://universe.roboflow.com/roboflow-gw7yv/vehicles-openimages
 - Rozmiar / format: 416x416 / jpg
 - Czy dane są już dostępne? tak / nie — plan pozyskania: tak
 
 ## 7. Stos technologiczny
-Stos technologiczny: Python z bibliotekami OpenCV i scikit-image (przetwarzanie obrazów, HOG), scikit-learn (model i metryki) oraz Matplotlib (wykresy), w środowisku Jupyter Notebook.
-## 8. Kryterium sukcesu
+Stos technologiczny: Python z bibliotekami OpenCV i scikit-image (przetwarzanie obrazów, HOG), scikit-learn (model i metryki) oraz Matplotlib (wykresy), w środowisku PyCharm.
 
+## 8. Kryterium sukcesu
 - Metryka i próg: accuracy ≥ 80% i macro F1 ≥ 0,75 na zbiorze testowym, przy recall dla każdej klasy ≥ 0,70.
-- Punkt odniesienia (prosta metoda, z którą porównacie wynik): prosty baseline, czyli klasyfikator przewidujący najczęstszą klasę (DummyClassifier), co daje ok. 25–30% accuracy przy 4 klasach, oraz k-NN na surowych pikselach. Model HOG + SVM musi wyraźnie pokonać oba.
+- Punkt odniesienia (prosta metoda, z którą porównacie wynik): prosty baseline, czyli klasyfikator przewidujący najczęstszą klasę (DummyClassifier), co daje ok. 50-58% accuracy przy 5 klasach, oraz k-NN na surowych pikselach. Model HOG + SVM musi wyraźnie pokonać oba.
 
 ## 9. Zakres minimalny (co powstanie na pewno)
 Zakres minimalny: klasyfikacja zdjęć do 5 typów pojazdów (osobowy, ciężarowy, autobus, motocykl, ambulans). Projekt obejmuje publiczny zbiór danych, cechy HOG, klasyfikator SVM lub Random Forest, ocenę metrykami (accuracy, F1, macierz pomyłek) oraz prosty skrypt zwracający typ pojazdu dla podanego zdjęcia.
