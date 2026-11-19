@@ -1,0 +1,56 @@
+=== Sprint 19.11 ===
+
+Zobowiązanie z poprzednich zajęć: działający w repozytorium proces od wycięcia pojazdów ze zdjęć do predykcji typu pojazdu dla pojedynczego zdjęcia, wraz z wynikami walidacji krzyżowej – tak, zrobione
+
+
+
+[Radosław Sieroń]
+
+Zrobiłem/zrobiłam: Wczytywanie zbioru YOLO z pomijaniem duplikatów (src/dataset.py) i wycinanie pojazdów (src/make_crops.py)
+
+Na następne zajęcia zrobię: Opis zbioru i duplikatów w README, macierz pomyłek i analiza błędów klasy Truck
+
+
+
+[Michał Zarzycki]
+
+Zrobiłem/zrobiłam: Cechy HOG, trening z baseline'ami i walidacją krzyżową, klasa VehicleClassifier, skrypt predict.py
+
+Na następne zajęcia zrobię: Plan awaryjny – cechy z MobileNet + SVM
+
+
+
+Blokuje nas: nic
+
+Zobowiązanie zespołu na następne zajęcia: model spełniający progi z karty w walidacji krzyżowej (HOG + SVM po poprawkach albo MobileNet + SVM) oraz porównanie obu podejść na wykresach.
+
+Wyniki walidacji krzyżowej (5 foldów, StratifiedGroupKFold, 894 wycinki z train + valid):
+
+  Model          accuracy  macro F1  recall: Ambulance  Bus   Car   Motorcycle  Truck
+  Dummy          0,485     0,131             0,00       0,00  1,00  0,00        0,00
+  k-NN piksele   0,468     0,237             0,10       0,32  0,84  0,00        0,05
+  HOG + SVM      0,742     0,680             0,67       0,65  0,87  0,77        0,39
+  Próg z karty   0,80      0,75              0,70 dla każdej klasy
+
+HOG + SVM wyraźnie pokonuje oba baseline'y, ale nie spełnia progów z karty. Najsłabsza jest klasa Truck (recall 0,39, F1 0,44).
+
+Dane:
+- Zbiór Vehicles-OpenImages v1 ma 1254 zdjęcia (train 878, valid 250, test 126).
+- Każde zdjęcie występuje dokładnie dwa razy pod różnymi nazwami Roboflow (identyczne piksele i etykiety), zawsze w obrębie tego samego splitu. Po pominięciu 627 duplikatów zostaje 627 zdjęć (train 439, valid 125, test 63), więc między splitami nie ma przecieku.
+- Po odrzuceniu ramek o krótszym boku poniżej 32 px powstało 997 wycinków (train 695, valid 199, test 103). Najwięcej małych ramek odpadło w klasie Car (166).
+- Car stanowi około 49% wycinków, pozostałe klasy po około 13%.
+
+Radosław Sieroń:
+- README: opis duplikatów w zbiorze i liczby wycinków na klasę
+- notatnik z macierzą pomyłek HOG + SVM i przykładami błędnie sklasyfikowanych ciężarówek
+- próba poprawy HOG + SVM: zbalansowanie klas, dodatkowa augmentacja
+
+Michał Zarzycki:
+- ekstrakcja cech z MobileNet (bez dotrenowywania sieci) połączona z SVM
+- porównanie MobileNet + SVM z HOG + SVM w tej samej walidacji krzyżowej
+
+Wspólnie:
+- wybór ostatecznego modelu
+- uzgodnienie z prowadzącym użycia MobileNet jako planu awaryjnego
+
+Zbiór testowy pozostaje nieużyty do czasu wyboru ostatecznego modelu.
