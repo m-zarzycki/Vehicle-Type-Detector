@@ -1,0 +1,14 @@
+=== Sprint 23.11 ===
+
+Zobowiązanie z poprzednich zajęć: model spełniający progi z karty w walidacji krzyżowej (HOG + SVM po poprawkach albo MobileNet + SVM) oraz porównanie obu podejść na wykresach.
+
+[Radosław Sieroń]
+
+Zrobiłem/zrobiłam: Opis zbioru i duplikatów w README, macierz pomyłek i analiza błędów klasy Truck (folder notebooks)
+
+[Michał Zarzycki]
+
+Zrobiłem/zrobiłam: Plan awaryjny – cechy z MobileNet + SVM, C tuning
+
+
+Wybrany model: SVM + MobileNet
