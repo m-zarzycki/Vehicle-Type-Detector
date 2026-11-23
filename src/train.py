@@ -6,7 +6,7 @@ from sklearn.dummy import DummyClassifier
 from sklearn.metrics import accuracy_score, classification_report, f1_score, recall_score
 from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.pipeline import make_pipeline
+from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
@@ -32,7 +32,7 @@ def build_hog_model():
 
 
 def build_mobilenet_model(C=0.3):
-    # C do dobrania walidacją krzyżową (np. 0.1, 1, 10), tak jak przy HOG
+    # C dobrane walidacją krzyżową na train + valid (python -m src.tune)
     return make_pipeline(
         MobileNetTransformer(),
         StandardScaler(),
@@ -54,20 +54,34 @@ def build_baselines():
     }
 
 
-def with_flips(images, labels):
-    flipped = [cv2.flip(image, 1) for image in images]
-    return images + flipped, np.concatenate([labels, labels])
+def features_with_flips(extractor, images):
+    """Cechy wycinków i ich odbić lustrzanych.
+
+    Pierwszy krok każdego potoku (piksele, HOG, MobileNet) niczego nie uczy się z danych,
+    więc cechy wycinka są takie same w każdym foldzie i wystarczy policzyć je raz.
+    """
+    features = extractor.transform(images)
+    flipped = extractor.transform([cv2.flip(image, 1) for image in images])
+    return features, flipped
 
 
-def cross_validate(model, images, labels, groups):
+def cross_validate_features(model, features, flipped, labels, groups):
+    """Walidacja krzyżowa na gotowych cechach. Odbicia trafiają tylko do części uczącej foldu."""
     # Tu trafiają predykcje dla wycinków z kolejnych foldów walidacyjnych
     predicted = np.empty_like(labels)
     folds = StratifiedGroupKFold(n_splits=N_FOLDS, shuffle=True, random_state=RANDOM_STATE)
-    for train_index, test_index in folds.split(images, labels, groups):
-        train_images, train_labels = with_flips([images[i] for i in train_index], labels[train_index])
-        fold_model = clone(model).fit(train_images, train_labels)
-        predicted[test_index] = fold_model.predict([images[i] for i in test_index])
+    for train_index, test_index in folds.split(features, labels, groups):
+        train_features = np.concatenate([features[train_index], flipped[train_index]])
+        train_labels = np.concatenate([labels[train_index], labels[train_index]])
+        fold_model = clone(model).fit(train_features, train_labels)
+        predicted[test_index] = fold_model.predict(features[test_index])
     return predicted
+
+
+def cross_validate(model, images, labels, groups):
+    """Walidacja krzyżowa potoku: cechy liczone raz pierwszym krokiem, w foldach uczy się reszta potoku."""
+    features, flipped = features_with_flips(model[0], images)
+    return cross_validate_features(model[1:], features, flipped, labels, groups)
 
 
 def scores(labels, predicted, classes):
@@ -92,7 +106,11 @@ def train(crops_dir=CROPS_DIR, model_path=MODEL_PATH):
 
     models = build_baselines()
     models.update({name: build() for name, build in CANDIDATES.items()})
-    results = {name: cross_validate(model, images, labels, groups) for name, model in models.items()}
+    features = {name: features_with_flips(model[0], images) for name, model in models.items()}
+    results = {
+        name: cross_validate_features(model[1:], *features[name], labels, groups)
+        for name, model in models.items()
+    }
     for name, predicted in results.items():
         accuracy, macro_f1, recalls = scores(labels, predicted, classes)
         per_class = "  ".join(f"{c} {r:.2f}" for c, r in zip(classes, recalls))
@@ -104,8 +122,11 @@ def train(crops_dir=CROPS_DIR, model_path=MODEL_PATH):
     print(f"\nNajlepszy model: {best}")
     print(classification_report(labels, results[best], digits=3, zero_division=0))
 
-    train_images, train_labels = with_flips(images, labels)
-    model = CANDIDATES[best]().fit(train_images, train_labels)
+    # Cechy najlepszego modelu są już policzone, więc na całym train + valid uczymy tylko
+    # StandardScaler + SVC, a potem doklejamy przed nie krok liczący cechy
+    extractor_step, *classifier_steps = CANDIDATES[best]().steps
+    classifier = Pipeline(classifier_steps).fit(np.concatenate(features[best]), np.concatenate([labels, labels]))
+    model = Pipeline([extractor_step, *classifier.steps])
     model_path.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(model, model_path)
     print(f"Zapisano model {best}: {model_path}")

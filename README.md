@@ -74,7 +74,7 @@ python -m src.tune                # dobór parametru C dla MobileNet + SVM
 python predict.py zdjecie.jpg     # typ pojazdu dla podanych zdjęć
 ```
 
-`src.train` liczy cechy MobileNet osobno dla każdego foldu, więc na CPU trwa kilka minut. `predict.py` działa najlepiej, gdy pojazd wypełnia większość kadru, bo model uczył się na wycinkach.
+Krok liczący cechy (piksele, HOG, MobileNet) niczego nie uczy się z danych, więc `src.train` i `src.tune` liczą cechy każdego wycinka i jego odbicia tylko raz, a w foldach walidacji krzyżowej uczą już tylko `StandardScaler` + klasyfikator. Dzięki temu na CPU każde z nich trwa około pół minuty. `predict.py` działa najlepiej, gdy pojazd wypełnia większość kadru, bo model uczył się na wycinkach.
 
 Notatniki w `notebooks/`:
 - `analiza_bledow_hog_svm.ipynb`: macierz pomyłek i przykłady błędów HOG + SVM, zwłaszcza dla klasy Truck,
