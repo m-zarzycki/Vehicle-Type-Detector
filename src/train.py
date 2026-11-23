@@ -12,7 +12,7 @@ from sklearn.svm import SVC
 
 from src.config import CROPS_DIR, MODEL_PATH
 from src.dataset import load_crops
-from src.features import HogTransformer, PixelTransformer
+from src.features import HogTransformer, MobileNetTransformer, PixelTransformer
 
 N_FOLDS = 5
 RANDOM_STATE = 42
@@ -21,7 +21,7 @@ TARGET_MACRO_F1 = 0.75
 TARGET_RECALL = 0.70
 
 
-def build_model():
+def build_hog_model():
     # C i gamma dobrane walidacją krzyżową na train + valid.
     # gamma="auto" to 1 / liczba cech, a class_weight="balanced" daje rzadszym klasom większą wagę.
     return make_pipeline(
@@ -29,6 +29,22 @@ def build_model():
         StandardScaler(),
         SVC(C=1, gamma="auto", class_weight="balanced"),
     )
+
+
+def build_mobilenet_model(C=0.3):
+    # C do dobrania walidacją krzyżową (np. 0.1, 1, 10), tak jak przy HOG
+    return make_pipeline(
+        MobileNetTransformer(),
+        StandardScaler(),
+        SVC(C=C, gamma="auto", class_weight="balanced"),
+    )
+
+
+# Kandydaci na ostateczny model, porównywani w tej samej walidacji krzyżowej
+CANDIDATES = {
+    "HOG + SVM": build_hog_model,
+    "MobileNet + SVM": build_mobilenet_model,
+}
 
 
 def build_baselines():
@@ -62,6 +78,10 @@ def scores(labels, predicted, classes):
     )
 
 
+def meets_targets(accuracy, macro_f1, recalls):
+    return accuracy >= TARGET_ACCURACY and macro_f1 >= TARGET_MACRO_F1 and recalls.min() >= TARGET_RECALL
+
+
 def train(crops_dir=CROPS_DIR, model_path=MODEL_PATH):
     images, labels, groups = load_crops(crops_dir, ("train", "valid"))
     if not images:
@@ -71,28 +91,25 @@ def train(crops_dir=CROPS_DIR, model_path=MODEL_PATH):
     print(f"Walidacja krzyżowa ({N_FOLDS} foldów) na {len(images)} wycinkach z train + valid\n")
 
     models = build_baselines()
-    models["HOG + SVM"] = build_model()
+    models.update({name: build() for name, build in CANDIDATES.items()})
     results = {name: cross_validate(model, images, labels, groups) for name, model in models.items()}
     for name, predicted in results.items():
         accuracy, macro_f1, recalls = scores(labels, predicted, classes)
         per_class = "  ".join(f"{c} {r:.2f}" for c, r in zip(classes, recalls))
-        print(f"{name:<13} accuracy {accuracy:.3f}  macro F1 {macro_f1:.3f}  | recall: {per_class}")
+        targets = "tak" if meets_targets(accuracy, macro_f1, recalls) else "nie"
+        print(f"{name:<16} accuracy {accuracy:.3f}  macro F1 {macro_f1:.3f}  | recall: {per_class}  | progi: {targets}")
 
-    print("\nHOG + SVM:")
-    print(classification_report(labels, results["HOG + SVM"], digits=3, zero_division=0))
-    accuracy, macro_f1, recalls = scores(labels, results["HOG + SVM"], classes)
-    meets_targets = (
-        accuracy >= TARGET_ACCURACY
-        and macro_f1 >= TARGET_MACRO_F1
-        and recalls.min() >= TARGET_RECALL
-    )
-    print("Progi z karty spełnione:", "tak" if meets_targets else "nie")
+    # Wybór po macro F1 z walidacji krzyżowej, zbiór testowy zostaje nietknięty
+    best = max(CANDIDATES, key=lambda name: scores(labels, results[name], classes)[1])
+    print(f"\nNajlepszy model: {best}")
+    print(classification_report(labels, results[best], digits=3, zero_division=0))
 
     train_images, train_labels = with_flips(images, labels)
-    model = build_model().fit(train_images, train_labels)
+    model = CANDIDATES[best]().fit(train_images, train_labels)
     model_path.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(model, model_path)
-    print(f"Zapisano model: {model_path}")
+    print(f"Zapisano model {best}: {model_path}")
+    return labels, results
 
 
 if __name__ == "__main__":
